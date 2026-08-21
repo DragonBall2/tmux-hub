@@ -58,9 +58,27 @@ bash install.sh -d ~/work -s work        # -d: 새 창 시작 폴더, -s: tmux �
 | 본문 | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | 일반 tmux: 새 창 · 창 닫기 · 트리 |
 | 셸 | `claude` (=`ccr`) | 세션 ID가 보존되는 Claude Code 실행 |
 | 셸 | `twin [@N\|new]`, `twt-all` | 창을 Windows Terminal 개별 탭으로 |
+| 사이드바 / 셸 | `Ctrl+w` / `twork new <브랜치>` | **작업당 git worktree 하나**: `../<repo>-wt/<브랜치>` 생성, 그 폴더에 창 열고 `claude` 시작 |
 
 Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아무것도 멈추지 않습니다.
 패널 경계를 드래그하면 사이드바 너비가 바뀌고 기억됩니다.
+
+## 작업당 worktree (`twork`)
+같은 체크아웃에서 에이전트 여러 개를 돌리면 서로의 수정과 `git` 상태를 밟습니다. `twork`는 작업마다 브랜치 +
+작업 폴더 + tmux 창을 따로 줍니다:
+
+```bash
+twork new feat/login            # 브랜치 + ../<repo>-wt/feat-login + tmux 창 (+ claude)
+twork new hotfix --from v1.2    # 다른 ref 에서 분기
+twork ls                        # worktree 목록, 연결된 tmux 창, 미커밋 표시
+twork drop feat/login           # 미커밋 변경이 있거나 현재 main 브랜치에 미머지면 거부
+twork drop feat/login --force   # 강제 제거(창 닫기, worktree 제거, 미머지 브랜치는 남김)
+```
+저장소 안에서 실행합니다(사이드바 `Ctrl+w`는 `TMUX_BASE_DIR`에서 실행). 저장소에 실행 가능한
+`.worktree-setup.sh`가 있으면 생성 직후 `.worktree-setup.sh <메인 체크아웃> <새 worktree>`로 호출됩니다 —
+새 체크아웃에 없는 ignore 파일(`.env`, 서명 키, `local.properties`) 복사나 의존성 설치에 쓰세요.
+worktree 위치는 `~/.config/tmux-hub/env`의 `TWORK_ROOT`(기본: 저장소 옆). `/mnt/<드라이브>`(NTFS)의 큰
+저장소는 체크아웃에 수십 초 걸리며 진행률이 사이드바에 표시됩니다.
 
 ## 동작 원리
 - **기본 tmux 서버**(기본 소켓)가 실제 창들을 가짐

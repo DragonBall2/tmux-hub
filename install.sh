@@ -8,7 +8,7 @@
 #     --without-claude skip it                                     (default: auto-detect `claude`)
 #     --no-wt          do not touch Windows Terminal settings
 #
-# Installs: ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty[,ccr]}, fzf, TPM + resurrect +
+# Installs: ~/.local/bin/{thub,tside,twin,twt-all,twork,tmux-restore-if-empty[,ccr]}, fzf, TPM + resurrect +
 #   continuum, a block in ~/.tmux.conf, ~/.tmux-hub.conf, systemd user timer/services,
 #   ~/.config/tmux-hub/env, [alias claude=ccr], Windows Terminal profiles (tmux-hub as default).
 # Re-running is safe (idempotent).
@@ -32,10 +32,23 @@ echo "  session=$SESSION  dir=$BASE_DIR  claude=$([ "$CLAUDE" = 1 ] && echo on |
 
 say "Scripts → ~/.local/bin"
 mkdir -p ~/.local/bin ~/.config/tmux-hub ~/.local/state/tmux-hub
-for f in thub tside twin twt-all tmux-restore-if-empty; do install -m755 "$HERE/bin/$f" ~/.local/bin/; done
+for f in thub tside twin twt-all twork tmux-restore-if-empty; do install -m755 "$HERE/bin/$f" ~/.local/bin/; done
 [ "$CLAUDE" = 1 ] && install -m755 "$HERE/bin/ccr" ~/.local/bin/
 grep -q 'HOME/.local/bin' ~/.profile 2>/dev/null || echo 'PATH="$HOME/.local/bin:$PATH"' >> ~/.profile
-cat > ~/.config/tmux-hub/env <<ENV
+ENVF=~/.config/tmux-hub/env
+if [ -f "$ENVF" ]; then   # keep user edits (language, width...); refresh only session/dir
+  sed -i "s|^TMUX_BASE_SESSION=.*|TMUX_BASE_SESSION=\"$SESSION\"|; s|^TMUX_BASE_DIR=.*|TMUX_BASE_DIR=\"$BASE_DIR\"|; s|^NEW_WINDOW_DIR=.*|NEW_WINDOW_DIR=\"$BASE_DIR\"|" "$ENVF"
+else
+cat > "$ENVF" <<ENV
+# tmux-hub per-machine settings (written by install.sh; edit freely)
+TMUX_BASE_SESSION="$SESSION"
+TMUX_BASE_DIR="$BASE_DIR"
+SIDEBAR_WIDTH=34
+NEW_WINDOW_DIR="$BASE_DIR"
+# TMUX_HUB_LANG=en   # sidebar language: ko | en (default: from \$LANG)
+# TWORK_ROOT=        # where twork puts worktrees (default: <parent of repo>/<repo>-wt)
+ENV
+fi
 # tmux-hub per-machine settings (written by install.sh; edit freely)
 TMUX_BASE_SESSION="$SESSION"
 TMUX_BASE_DIR="$BASE_DIR"

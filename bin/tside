@@ -31,9 +31,9 @@ confirm_kill() {   # Ctrl+X: close the selected window (confirmation required; w
 }
 export -f list curpos confirm_kill
 if [ "$L" = ko ]; then
-  HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+←→ 패널  Alt+B 너비')"
+  HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^W worktree  ^X 닫기\n ^R 갱신  Alt+←→ 패널  Alt+B 너비')"
 else
-  HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^X close  ^R refresh\n Alt+←→ pane  Alt+B width')"
+  HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^W worktree  ^X close\n ^R refresh  Alt+←→ pane  Alt+B width')"
 fi
 export L
 port=$(( 20000 + RANDOM % 20000 ))
@@ -76,6 +76,7 @@ width=$w"
         --bind "double-click:execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
         --bind "enter:execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
         --bind "ctrl-x:execute(bash -c 'confirm_kill {1}')+reload-sync(bash -c list)+transform(bash -c curpos)" \
+        --bind "ctrl-w:execute(HUB_SESSION=$SESS twork prompt)+reload-sync(bash -c list)+transform(bash -c curpos)" \
         --bind "ctrl-n:execute-silent(tmux new-window -t $SESS -c ${NEW_WINDOW_DIR:-${TMUX_BASE_DIR:-$HOME}})+reload-sync(bash -c list)+transform(bash -c curpos)" 2>/dev/null)"
   rc=$?
   kill $ticker 2>/dev/null; wait $ticker 2>/dev/null
