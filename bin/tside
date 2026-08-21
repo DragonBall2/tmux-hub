@@ -38,8 +38,17 @@ fi
 export L
 port=$(( 20000 + RANDOM % 20000 ))
 while true; do
-  ( while sleep 2; do
-      curl -s -XPOST "localhost:$port" -d 'reload-sync(bash -c list)+transform(bash -c curpos)' >/dev/null || break
+  ( prev=""
+    while sleep 2; do
+      # redraw only when the list actually changed — every redraw briefly moves the terminal cursor
+      # into the sidebar pane, which shows up as a cursor flicker in the body pane
+      now="$(list)"
+      if [ "$now" != "$prev" ]; then
+        curl -s -XPOST "localhost:$port" -d 'reload-sync(bash -c list)+transform(bash -c curpos)' >/dev/null || break
+        prev="$now"
+      else
+        curl -s -XPOST "localhost:$port" -d 'ignore' >/dev/null || break   # liveness check only
+      fi
       # remember a sidebar width changed by dragging (the resize hook restores it)
       if [ -n "${HUB_OUT:-}" ]; then
         w="$(tmux -L hub display -p -t "$HUB_OUT:0.1" '#{pane_width}' 2>/dev/null)"
