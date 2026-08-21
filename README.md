@@ -56,10 +56,14 @@ binfmt entry that lets WSL launch `wt.exe`/`clip.exe`; this entry is sometimes l
 | Sidebar | `Ctrl+n` / `Ctrl+x` / `Ctrl+r` | new window / close window (asks `y`) / refresh |
 | Sidebar | `Alt+↑` `Alt+↓` | move the selected window up/down (reorders tmux window indexes) |
 | Anywhere | `Alt+←` `Alt+→` | move focus between panes |
-| Anywhere | `Alt+[` `Alt+]` · `Alt+b` | sidebar narrower / wider (4 cols) · reset to 34. Width is remembered per hub name (`thub phone` keeps its own) |
+| Anywhere | `Alt+[` `Alt+]` · `Alt+b` | sidebar smaller / larger (4 cols, or 2 rows in the top layout) · reset. Size is remembered per hub name (`thub phone` keeps its own) |
 | Body | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | plain tmux: new window · kill window · tree |
 | Shell | `claude` (alias of `ccr`) | start Claude Code with a persistent session id |
 | Shell | `twin [@N\|new]`, `twt-all` | open windows as separate Windows Terminal tabs instead |
+
+**Narrow screens (phones over SSH):** when the terminal is narrower than 90 columns, `thub` puts the sidebar as a
+strip **above** the body with a one-line header instead of a right-hand column. Force it with `thub phone top` / `thub phone right`
+(or `SIDEBAR_POS=top`). `Alt+←/→` toggles between the two panes in either layout.
 
 Closing the Windows Terminal tab only detaches; nothing inside tmux stops.
 Drag the pane border to resize the sidebar — the width is remembered.

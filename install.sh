@@ -48,13 +48,6 @@ NEW_WINDOW_DIR="$BASE_DIR"
 # TMUX_HUB_LANG=en   # sidebar language: ko | en (default: from \$LANG)
 ENV
 fi
-# tmux-hub per-machine settings (written by install.sh; edit freely)
-TMUX_BASE_SESSION="$SESSION"
-TMUX_BASE_DIR="$BASE_DIR"
-SIDEBAR_WIDTH=34
-NEW_WINDOW_DIR="$BASE_DIR"
-# TMUX_HUB_LANG=en   # sidebar language: ko | en (default: from \$LANG)
-ENV
 
 say "fzf"
 if ! command -v fzf >/dev/null || ! fzf --version | awk '{split($1,v,"."); exit !(v[1]>0 || v[2]>=44)}'; then

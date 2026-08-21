@@ -2,14 +2,22 @@
 # per-machine settings: ~/.config/tmux-hub/env (TMUX_BASE_SESSION, TMUX_BASE_DIR, SIDEBAR_WIDTH, NEW_WINDOW_DIR)
 [ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
 # thub — body pane (nested tmux client) + window-list sidebar in one terminal tab
-#   thub [name]   : name defaults to "hub"; use another name (thub hub2) for a second tab
+#   thub [name] [right|top] : name defaults to "hub"; use another name (thub phone) for a second tab.
+#   Layout auto-selects "top" (sidebar strip above the body) when the terminal is narrower than 90 columns.
 set -e
-BASE="${TMUX_BASE_SESSION:-main}"; NAME="${1:-hub}"; WIDTH="${SIDEBAR_WIDTH:-34}"
-# restore previous state (last window, sidebar width)
+BASE="${TMUX_BASE_SESSION:-main}"; NAME="${1:-hub}"; WIDTH="${SIDEBAR_WIDTH:-34}"; HEIGHT="${SIDEBAR_HEIGHT:-8}"
+# layout: right (sidebar column) | top (sidebar strip, for narrow screens such as phones) | auto (default)
+#   thub [name] [right|top]   or   SIDEBAR_POS=top thub phone
+LAYOUT="${2:-${SIDEBAR_POS:-auto}}"
+if [ "$LAYOUT" = auto ]; then
+  cols="$(tput cols 2>/dev/null || echo 200)"; if [ "${cols:-200}" -lt 90 ]; then LAYOUT=top; else LAYOUT=right; fi
+fi
+# restore previous state (last window, sidebar size)
 STATE="$HOME/.local/state/tmux-hub/$NAME"; LASTWIN=""
 if [ -f "$STATE" ]; then
   LASTWIN="$(sed -n 's/^window=//p' "$STATE")"
-  w="$(sed -n 's/^width=//p' "$STATE")"; [ -n "${SIDEBAR_WIDTH:-}" ] || { [ -n "$w" ] && WIDTH="$w"; }
+  w="$(sed -n 's/^width=//p' "$STATE")";  [ -n "${SIDEBAR_WIDTH:-}" ]  || { [ -n "$w" ] && WIDTH="$w"; }
+  h="$(sed -n 's/^height=//p' "$STATE")"; [ -n "${SIDEBAR_HEIGHT:-}" ] || { [ -n "$h" ] && HEIGHT="$h"; }
 fi
 # No base session (e.g. right after boot): restore from the resurrect save first (synchronously).
 # continuum's auto-restore is not used: it skips when another tmux server (the hub) exists.
@@ -25,13 +33,22 @@ OUT="hub-$NAME"
 if ! tmux -L hub has-session -t "$OUT" 2>/dev/null; then
   tmux -L hub -f ~/.tmux-hub.conf new-session -d -s "$OUT" -x 200 -y 50 \
       "env -u TMUX tmux attach-session -t $NAME \; set-option destroy-unattached on"
-  # sidebar on the right (pane 1): on the left, wide chars at the body edge bleed into its first column (tmux 3.2a)
-  tmux -L hub split-window -h -l "$WIDTH" -t "$OUT:0.0" "HUB_OUT=$OUT SIDEBAR_WIDTH=$WIDTH tside $NAME"
-  tmux -L hub select-pane -t "$OUT:0.0"
+  if [ "$LAYOUT" = top ]; then
+    # sidebar strip above the body
+    SP="$(tmux -L hub split-window -vb -l "$HEIGHT" -P -F '#{pane_id}' -t "$OUT:0.0" "HUB_OUT=$OUT SIDEBAR_LAYOUT=top tside $NAME")"
+    SIZE="$HEIGHT"
+  else
+    # sidebar on the right: on the left, wide chars at the body edge bleed into its first column (tmux 3.2a)
+    SP="$(tmux -L hub split-window -h -l "$WIDTH" -P -F '#{pane_id}' -t "$OUT:0.0" "HUB_OUT=$OUT SIDEBAR_LAYOUT=right tside $NAME")"
+    SIZE="$WIDTH"
+  fi
+  tmux -L hub set-option -t "$OUT" @sidebar_pane "$SP"
+  tmux -L hub set-option -t "$OUT" @sidebar_layout "$LAYOUT"
+  tmux -L hub set-option -t "$OUT" @sidebar_size "$SIZE"
+  tmux -L hub select-pane -t "$OUT:0.0"   # focus the body (pane 0 is always the body)
   tmux -L hub set-hook -t "$OUT" pane-exited "kill-session -t $OUT"
-  # keep the sidebar width when the client is resized
-  tmux -L hub set-option -t "$OUT" @sidebar_width "$WIDTH"
-  fix='run-shell "tmux -L hub resize-pane -t '"$OUT"':0.1 -x \$(tmux -L hub show -v -t '"$OUT"' @sidebar_width)"'
+  # keep the sidebar size when the client is resized (-x for right layout, -y for top)
+  fix='run-shell "tmux -L hub resize-pane -t \$(tmux -L hub show -v -t '"$OUT"' @sidebar_pane) -'"$([ "$LAYOUT" = top ] && echo y || echo x)"' \$(tmux -L hub show -v -t '"$OUT"' @sidebar_size)"'
   tmux -L hub set-hook -t "$OUT" client-resized "$fix"
   tmux -L hub set-hook -t "$OUT" client-attached "$fix"
 fi

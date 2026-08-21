@@ -56,10 +56,13 @@ bash install.sh -d ~/work -s work        # -d: 새 창 시작 폴더, -s: tmux �
 | 사이드바 | `Ctrl+n` / `Ctrl+x` / `Ctrl+r` | 새 창 / 창 닫기(`y` 확인) / 갱신 |
 | 사이드바 | `Alt+↑` `Alt+↓` | 선택한 창을 위/아래로 이동(tmux 창 번호 순서 변경) |
 | 어디서나 | `Alt+←` `Alt+→` | 패널 포커스 이동 |
-| 어디서나 | `Alt+[` `Alt+]` · `Alt+b` | 사이드바 좁게 / 넓게(4칸) · 34칸으로 리셋. 너비는 허브 이름별로 기억됨(`thub phone`은 따로) |
+| 어디서나 | `Alt+[` `Alt+]` · `Alt+b` | 사이드바 작게 / 크게(4칸, 위쪽 레이아웃에선 2줄) · 리셋. 크기는 허브 이름별로 기억됨(`thub phone`은 따로) |
 | 본문 | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | 일반 tmux: 새 창 · 창 닫기 · 트리 |
 | 셸 | `claude` (=`ccr`) | 세션 ID가 보존되는 Claude Code 실행 |
 | 셸 | `twin [@N\|new]`, `twt-all` | 창을 Windows Terminal 개별 탭으로 |
+
+**좁은 화면(SSH로 붙은 휴대폰 등):** 터미널 폭이 90칸 미만이면 `thub`가 사이드바를 오른쪽 열 대신 본문 **위쪽 띠**로 배치하고
+헤더를 한 줄로 줄입니다. `thub phone top` / `thub phone right`(또는 `SIDEBAR_POS=top`)로 강제할 수 있고, `Alt+←/→`는 두 레이아웃 모두에서 패널을 오갑니다.
 
 Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아무것도 멈추지 않습니다.
 패널 경계를 드래그하면 사이드바 너비가 바뀌고 기억됩니다.

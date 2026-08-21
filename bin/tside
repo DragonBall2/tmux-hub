@@ -41,7 +41,9 @@ wmove() {   # Alt+↑/↓: swap the window with its neighbour in the list (reord
   tmux select-window -t "$SESS:$w" 2>/dev/null || true
 }
 export -f list curpos confirm_kill wmove
-if [ "$L" = ko ]; then
+if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then
+  if [ "$L" = ko ]; then HEADER=" ↑↓ 이동  ^N 새 창  ^X 닫기  Alt+[ ] 크기"; else HEADER=" ↑↓ switch  ^N new  ^X close  Alt+[ ] size"; fi
+elif [ "$L" = ko ]; then
   HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널\n Alt+[ ] 너비  Alt+B 34칸')"
 else
   HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^X close  ^R refresh\n Alt+↑↓ reorder  Alt+←→ pane\n Alt+[ ] width  Alt+B reset')"
@@ -62,16 +64,23 @@ while true; do
       fi
       # remember a sidebar width changed by dragging (the resize hook restores it)
       if [ -n "${HUB_OUT:-}" ]; then
-        w="$(tmux -L hub display -p -t "$HUB_OUT:0.1" '#{pane_width}' 2>/dev/null)"
-        # set-option makes tmux redraw the client — only call it when the width really changed
-        if [ -n "$w" ] && [ "$w" != "$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_width 2>/dev/null)" ]; then
-          tmux -L hub set-option -t "$HUB_OUT" @sidebar_width "$w"
+        # remember a sidebar size changed by dragging (the resize hook restores it); set-option redraws, so only on change
+        sp="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_pane 2>/dev/null)"
+        if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then dim=pane_height; key=height; else dim=pane_width; key=width; fi
+        w="$(tmux -L hub display -p -t "$sp" "#{$dim}" 2>/dev/null)"
+        if [ -n "$w" ] && [ "$w" != "$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_size 2>/dev/null)" ]; then
+          tmux -L hub set-option -t "$HUB_OUT" @sidebar_size "$w"
         fi
-        # persist state for the next thub start (last window, sidebar width)
+        # persist state for the next thub start (last window, sidebar size)
         cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
         st="window=$cur
-width=$w"
-        [ -n "$cur" ] && [ "$st" != "$(cat "$HOME/.local/state/tmux-hub/$SESS" 2>/dev/null)" ] && printf '%s\n' "$st" > "$HOME/.local/state/tmux-hub/$SESS"
+$key=$w"
+        if [ -n "$cur" ]; then
+          f="$HOME/.local/state/tmux-hub/$SESS"; other="$( [ "$key" = width ] && grep '^height=' "$f" 2>/dev/null || grep '^width=' "$f" 2>/dev/null )"
+          [ -n "$other" ] && st="$st
+$other"
+          [ "$st" != "$(cat "$f" 2>/dev/null)" ] && printf '%s\n' "$st" > "$f"
+        fi
       fi
     done ) &
   ticker=$!
