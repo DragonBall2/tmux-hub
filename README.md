@@ -55,7 +55,8 @@ binfmt entry that lets WSL launch `wt.exe`/`clip.exe`; this entry is sometimes l
 | Sidebar | `↑` `↓` · click · `Enter` | switch the body to that window (typing filters the list) |
 | Sidebar | `Ctrl+n` / `Ctrl+x` / `Ctrl+r` | new window / close window (asks `y`) / refresh |
 | Sidebar | `Alt+↑` `Alt+↓` | move the selected window up/down (reorders tmux window indexes) |
-| Anywhere | `Alt+←` `Alt+→` · `Alt+b` | move focus between panes · reset sidebar width |
+| Anywhere | `Alt+←` `Alt+→` | move focus between panes |
+| Anywhere | `Alt+[` `Alt+]` · `Alt+b` | sidebar narrower / wider (4 cols) · reset to 34. Width is remembered per hub name (`thub phone` keeps its own) |
 | Body | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | plain tmux: new window · kill window · tree |
 | Shell | `claude` (alias of `ccr`) | start Claude Code with a persistent session id |
 | Shell | `twin [@N\|new]`, `twt-all` | open windows as separate Windows Terminal tabs instead |

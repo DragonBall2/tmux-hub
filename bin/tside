@@ -42,9 +42,9 @@ wmove() {   # Alt+↑/↓: swap the window with its neighbour in the list (reord
 }
 export -f list curpos confirm_kill wmove
 if [ "$L" = ko ]; then
-  HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널  Alt+B 너비')"
+  HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널\n Alt+[ ] 너비  Alt+B 34칸')"
 else
-  HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^X close  ^R refresh\n Alt+↑↓ reorder  Alt+←→ pane  Alt+B width')"
+  HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^X close  ^R refresh\n Alt+↑↓ reorder  Alt+←→ pane\n Alt+[ ] width  Alt+B reset')"
 fi
 export L
 port=$(( 20000 + RANDOM % 20000 ))
