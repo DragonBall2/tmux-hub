@@ -47,15 +47,20 @@ while true; do
         curl -s -XPOST "localhost:$port" -d 'reload-sync(bash -c list)+transform(bash -c curpos)' >/dev/null || break
         prev="$now"
       else
-        curl -s -XPOST "localhost:$port" -d 'ignore' >/dev/null || break   # liveness check only
+        curl -s "localhost:$port" >/dev/null || break   # liveness check only (GET: no action, no redraw)
       fi
       # remember a sidebar width changed by dragging (the resize hook restores it)
       if [ -n "${HUB_OUT:-}" ]; then
         w="$(tmux -L hub display -p -t "$HUB_OUT:0.1" '#{pane_width}' 2>/dev/null)"
-        [ -n "$w" ] && tmux -L hub set-option -t "$HUB_OUT" @sidebar_width "$w"
+        # set-option makes tmux redraw the client — only call it when the width really changed
+        if [ -n "$w" ] && [ "$w" != "$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_width 2>/dev/null)" ]; then
+          tmux -L hub set-option -t "$HUB_OUT" @sidebar_width "$w"
+        fi
         # persist state for the next thub start (last window, sidebar width)
         cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
-        [ -n "$cur" ] && printf 'window=%s\nwidth=%s\n' "$cur" "$w" > "$HOME/.local/state/tmux-hub/$SESS"
+        st="window=$cur
+width=$w"
+        [ -n "$cur" ] && [ "$st" != "$(cat "$HOME/.local/state/tmux-hub/$SESS" 2>/dev/null)" ] && printf '%s\n' "$st" > "$HOME/.local/state/tmux-hub/$SESS"
       fi
     done ) &
   ticker=$!
