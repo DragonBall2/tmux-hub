@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# per-machine settings: ~/.config/tmux-hub/env
+[ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
+# tside — tmux window-list sidebar (fzf). ↑↓/click/Enter switch the window shown in the body pane.
+# $1 = grouped session to drive (default: hub). The list refreshes every 2 s (cursor kept).
+unset TMUX   # runs inside the outer (hub) server; look at the default server instead
+case "${TMUX_HUB_LANG:-${LANG:-}}" in ko*) L=ko;; *) L=en;; esac
+SESS="${1:-hub}"; BASE="${TMUX_BASE_SESSION:-main}"
+export SESS BASE
+list() {
+  local cur; cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
+  tmux list-windows -t "$BASE" -F '#{window_id}	#{window_name}' | \
+    awk -F'\t' -v cur="$cur" '{m=($1==cur)?"▶":" "; printf "%s\t%s %s\n",$1,m,$2}'
+}
+curpos() { echo "pos($(list | grep -n -m1 $'\t▶' | cut -d: -f1))"; }   # fzf action: move the cursor to the ▶ (current window) line
+confirm_kill() {   # Ctrl+X: close the selected window (confirmation required; warns about running programs)
+  local w="$1" name procs a
+  name="$(tmux display -p -t "$BASE:$w" '#W' 2>/dev/null)" || return 0
+  procs="$(ps -o comm= --ppid "$(tmux display -p -t "$BASE:$w" '#{pane_pid}')" 2>/dev/null | sort -u | tr '\n' ' ')"
+  printf '\033[2J\033[H'                      # clear leftovers of previous prompts
+  if [ "$L" = ko ]; then
+    printf '\n  창 닫기: %s\n' "$name"; [ -n "$procs" ] && printf '  ⚠ 실행 중: %s\n' "$procs"
+    printf '  정말 닫을까요?  y = 닫기 / 그 외 = 취소 : '
+  else
+    printf '\n  Close window: %s\n' "$name"; [ -n "$procs" ] && printf '  ⚠ running: %s\n' "$procs"
+    printf '  Really close?  y = close / other = cancel : '
+  fi
+  IFS= read -rs -n1 a; read -rs -t 0.05 -n 16 _ 2>/dev/null   # drop remaining bytes of escape sequences (arrow keys etc.)
+  if [ "$a" = "y" ]; then tmux kill-window -t "$BASE:$w"; fi
+  printf '\033[2J\033[H'
+}
+export -f list curpos confirm_kill
+if [ "$L" = ko ]; then
+  HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+←→ 패널  Alt+B 너비')"
+else
+  HEADER="$(printf ' tmux windows\n ↑↓/click: switch  type: filter\n ^N new  ^X close  ^R refresh\n Alt+←→ pane  Alt+B width')"
+fi
+export L
+port=$(( 20000 + RANDOM % 20000 ))
+while true; do
+  ( while sleep 2; do
+      curl -s -XPOST "localhost:$port" -d 'reload-sync(bash -c list)+transform(bash -c curpos)' >/dev/null || break
+      # remember a sidebar width changed by dragging (the resize hook restores it)
+      if [ -n "${HUB_OUT:-}" ]; then
+        w="$(tmux -L hub display -p -t "$HUB_OUT:0.1" '#{pane_width}' 2>/dev/null)"
+        [ -n "$w" ] && tmux -L hub set-option -t "$HUB_OUT" @sidebar_width "$w"
+        # persist state for the next thub start (last window, sidebar width)
+        cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
+        [ -n "$cur" ] && printf 'window=%s\nwidth=%s\n' "$cur" "$w" > "$HOME/.local/state/tmux-hub/$SESS"
+      fi
+    done ) &
+  ticker=$!
+  # start with the cursor on the current window (▶)
+  pos="$(list | grep -n -m1 $'\t▶' | cut -d: -f1)"; pos="${pos:-1}"
+  sel="$(list | fzf --sync --listen "$port" --bind "start:pos($pos)" --layout=reverse --no-sort --delimiter '\t' --with-nth 2.. \
+        --no-info --prompt '' --pointer '' --color 'pointer:-1,bg+:238,fg+:bright-white' \
+        --header "$HEADER" --header-first \
+        --bind 'ctrl-r:reload-sync(bash -c list)+transform(bash -c curpos)' \
+        --bind "up:up+execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
+        --bind "down:down+execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
+        --bind "left-click:execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
+        --bind "double-click:execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
+        --bind "enter:execute-silent(tmux select-window -t $SESS:{1})+reload-sync(bash -c list)" \
+        --bind "ctrl-x:execute(bash -c 'confirm_kill {1}')+reload-sync(bash -c list)+transform(bash -c curpos)" \
+        --bind "ctrl-n:execute-silent(tmux new-window -t $SESS -c ${NEW_WINDOW_DIR:-${TMUX_BASE_DIR:-$HOME}})+reload-sync(bash -c list)+transform(bash -c curpos)" 2>/dev/null)"
+  rc=$?
+  kill $ticker 2>/dev/null; wait $ticker 2>/dev/null
+  [ $rc -eq 130 ] && continue          # ESC/Ctrl-C → just redraw
+  [ $rc -ne 0 ] && { sleep 1; continue; }
+  w="${sel%%	*}"
+  [ -n "$w" ] && tmux select-window -t "$SESS:$w" 2>/dev/null
+done

@@ -1,0 +1,20 @@
+# >>> tmux-hub (managed by install.sh) >>>
+# Session persistence: tmux-resurrect + tmux-continuum
+#  - save: systemd user timer every 5 min (continuum's own timer does not run for control-mode clients)
+#  - restore: tmux-resurrect-restore.service at boot, or `thub` when the base session is missing
+#  - manual: prefix + Ctrl-s save / prefix + Ctrl-r restore;  plugins: prefix + I (TPM)
+# ──────────────────────────────────────────────────────────────────────
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+@@RESURRECT_PROCESSES@@
+set -g @resurrect-capture-pane-contents 'off'
+set -g @continuum-restore 'off'   # restore is done by tmux-resurrect-restore.service / thub (continuum skips when the hub server exists)
+set -g @continuum-save-interval '15'
+run '~/.tmux/plugins/tpm/tpm'
+
+# Terminal tab title = tmux window name
+set -g set-titles on
+set -g set-titles-string '#W'
+
+# <<< tmux-hub <<<

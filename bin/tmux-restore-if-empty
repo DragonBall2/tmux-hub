@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# per-machine settings: ~/.config/tmux-hub/env
+[ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
+# Restore from the tmux-resurrect save only when the base session does not exist (e.g. right after boot).
+BASE="${TMUX_BASE_SESSION:-main}"
+LAST="$HOME/.local/share/tmux/resurrect/last"
+if tmux has-session -t "$BASE" 2>/dev/null; then echo "skip: session $BASE exists"; exit 0; fi
+[ -f "$LAST" ] || { echo "skip: no save file"; exit 0; }
+n=$(grep -c '^pane' "$LAST"); [ "$n" -ge 1 ] || { echo "skip: save file is empty"; exit 0; }
+echo "restore: $(readlink -f "$LAST") (panes=$n)"
+exec "$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh"

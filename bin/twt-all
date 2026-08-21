@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# per-machine settings: ~/.config/tmux-hub/env
+[ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
+# twt-all — open every tmux window as its own Windows Terminal tab (run inside WSL)
+#   twt-all          : all windows of the base session
+#   twt-all @3 @5    : only these
+DISTRO="${WSL_DISTRO_NAME:?run inside WSL}"
+BASE="${TMUX_BASE_SESSION:-main}"
+if [ $# -gt 0 ]; then wins=("$@"); else mapfile -t wins < <(tmux list-windows -t "$BASE" -F '#{window_id}'); fi
+for w in "${wins[@]}"; do
+  wt.exe -w last new-tab -p tmux-win \
+     -- wsl.exe -d "$DISTRO" -- bash -lc "twin $w"
+  sleep 0.4
+done

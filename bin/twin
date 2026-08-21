@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# per-machine settings: ~/.config/tmux-hub/env
+[ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
+# twin — one tmux window per terminal tab
+#   twin            : attach a grouped session of the base session (its current window)
+#   twin @7         : same, showing that window
+#   twin new [dir]  : create a window and attach to it (dir defaults to TMUX_BASE_DIR)
+# Grouped sessions share windows but have their own current window, so each tab can show a different one.
+# Closing the tab (detach) destroys only the grouped session (destroy-unattached); the window survives.
+set -e
+BASE="${TMUX_BASE_SESSION:-main}"
+tmux has-session -t "$BASE" 2>/dev/null || tmux new-session -d -s "$BASE" -c "${TMUX_BASE_DIR:-$HOME}"
+target=""
+case "${1:-}" in
+  new) dir="${2:-${TMUX_BASE_DIR:-$HOME}}"; target="$(tmux new-window -d -P -F '#{window_id}' -t "$BASE" -c "$dir")" ;;
+  @*)  target="$1" ;;
+esac
+name="wt-$$"
+tmux new-session -d -t "$BASE" -s "$name"
+[ -n "$target" ] && tmux select-window -t "$name:$target" 2>/dev/null || true
+# destroy-unattached must be set in the same command line as attach (set earlier, the session dies before attach)
+exec tmux attach-session -t "$name" \; set-option destroy-unattached on

@@ -1,0 +1,8 @@
+[Unit]
+Description=tmux-resurrect periodic save (continuum does not fire for control-mode-only clients)
+After=tmux-resurrect-restore.service
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash -c 'tmux ls >/dev/null 2>&1 || exit 0; n=$(tmux list-windows -a 2>/dev/null | wc -l); if [ "$n" -le 1 ]; then echo "skip save: windows=$n"; exit 0; fi; exec %h/.tmux/plugins/tmux-resurrect/scripts/save.sh quiet'

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# ccr — Claude Code, resurrect-friendly launcher.
+#
+#  new session:  ccr [claude options...]
+#                → pre-generates a session id and runs `claude --session-id <uuid>`, so the id is
+#                  visible in `ps` and tmux-resurrect can record *which* session this window runs.
+#  restore:      ccr --session-id <id> ...  or  ccr --resume <id> ...
+#                → `claude --resume <id>` if a transcript for that id exists, otherwise a fresh start.
+#  passthrough:  --continue / bare --resume (session picker) go to claude unchanged.
+#
+# tmux-resurrect side (.tmux.conf):  set -g @resurrect-processes '"~claude->ccr *"'
+set -u
+args=("$@")
+id=""; rest=()
+i=0
+while [ $i -lt ${#args[@]} ]; do
+  a="${args[$i]}"
+  case "$a" in
+    --session-id|--resume|-r)
+      nxt="${args[$((i+1))]:-}"
+      if [[ "$nxt" =~ ^[0-9a-fA-F-]{36}$ ]]; then id="$nxt"; i=$((i+2)); continue; fi
+      if [ "$a" = "--session-id" ]; then i=$((i+1)); continue; fi
+      # bare --resume (picker) → passthrough
+      exec claude "${args[@]}"
+      ;;
+    --continue|-c) exec claude "${args[@]}" ;;
+  esac
+  rest+=("$a"); i=$((i+1))
+done
+
+has_transcript() {
+  local f
+  for f in "$HOME"/.claude/projects/*/"$1".jsonl; do
+    [ -s "$f" ] && grep -q -m1 '"type":"user"' -- "$f" && return 0
+  done
+  return 1
+}
+
+if [ -z "$id" ]; then
+  id="$(cat /proc/sys/kernel/random/uuid)"
+fi
+if has_transcript "$id"; then
+  exec claude --resume "$id" "${rest[@]}"
+else
+  exec claude --session-id "$id" "${rest[@]}"
+fi

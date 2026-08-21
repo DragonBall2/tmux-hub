@@ -1,0 +1,18 @@
+# tmux-hub base config (installed only when ~/.tmux.conf does not exist yet)
+set -g mouse on
+set -g default-terminal "tmux-256color"
+set -ga terminal-overrides ",*:Tc"
+setw -g mode-keys vi
+setw -g mode-style "reverse"
+bind -T copy-mode-vi v send -X begin-selection
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel "clip.exe"
+bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-pipe-and-cancel "clip.exe"
+# window name = terminal title set by the running app (e.g. Claude Code session name) + [@window id]
+set -g automatic-rename on
+set -g automatic-rename-format '#{pane_title} [#{window_id}]'
+set-hook -g after-rename-window 'run-shell "tmux list-windows -a -F \"##{window_id}\" | xargs -r -I{} tmux set -w -t {} automatic-rename on"'
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+set -g history-limit 50000
+set -g escape-time 10
