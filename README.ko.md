@@ -54,6 +54,7 @@ bash install.sh -d ~/work -s work        # -d: 새 창 시작 폴더, -s: tmux �
 |---|---|---|
 | 사이드바 | `↑` `↓` · 클릭 · `Enter` | 본문을 그 창으로 전환(타이핑하면 목록 필터) |
 | 사이드바 | `Ctrl+n` / `Ctrl+x` / `Ctrl+r` | 새 창 / 창 닫기(`y` 확인) / 갱신 |
+| 사이드바 | `Alt+↑` `Alt+↓` | 선택한 창을 위/아래로 이동(tmux 창 번호 순서 변경) |
 | 어디서나 | `Alt+←` `Alt+→` · `Alt+b` | 패널 포커스 이동 · 사이드바 너비 리셋 |
 | 본문 | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | 일반 tmux: 새 창 · 창 닫기 · 트리 |
 | 셸 | `claude` (=`ccr`) | 세션 ID가 보존되는 Claude Code 실행 |
