@@ -42,7 +42,8 @@ wmove() {   # Alt+↑/↓: swap the window with its neighbour in the list (reord
 }
 export -f list curpos confirm_kill wmove
 if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then
-  if [ "$L" = ko ]; then HEADER=" ↑↓ 이동  ^N 새 창  ^X 닫기  Alt+[ ] 크기"; else HEADER=" ↑↓ switch  ^N new  ^X close  Alt+[ ] size"; fi
+  if [ "$L" = ko ]; then HEADER="$(printf ' ↑↓·클릭 이동  ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널  Alt+[ ] 크기')"
+  else HEADER="$(printf ' ↑↓/click switch  ^N new  ^X close  ^R refresh\n Alt+↑↓ reorder  Alt+←→ pane  Alt+[ ] size')"; fi
 elif [ "$L" = ko ]; then
   HEADER="$(printf ' tmux 창 목록\n ↑↓·클릭 이동  타이핑 필터\n ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널\n Alt+[ ] 너비  Alt+B 34칸')"
 else

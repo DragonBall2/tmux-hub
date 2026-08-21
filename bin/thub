@@ -5,7 +5,7 @@
 #   thub [name] [right|top] : name defaults to "hub"; use another name (thub phone) for a second tab.
 #   Layout auto-selects "top" (sidebar strip above the body) when the terminal is narrower than 90 columns.
 set -e
-BASE="${TMUX_BASE_SESSION:-main}"; NAME="${1:-hub}"; WIDTH="${SIDEBAR_WIDTH:-34}"; HEIGHT="${SIDEBAR_HEIGHT:-8}"
+BASE="${TMUX_BASE_SESSION:-main}"; NAME="${1:-hub}"; WIDTH="${SIDEBAR_WIDTH:-34}"; HEIGHT="${SIDEBAR_HEIGHT:-9}"
 # layout: right (sidebar column) | top (sidebar strip, for narrow screens such as phones) | auto (default)
 #   thub [name] [right|top]   or   SIDEBAR_POS=top thub phone
 LAYOUT="${2:-${SIDEBAR_POS:-auto}}"
