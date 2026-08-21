@@ -58,27 +58,9 @@ binfmt entry that lets WSL launch `wt.exe`/`clip.exe`; this entry is sometimes l
 | Body | `Ctrl+a c` · `Ctrl+a &` · `Ctrl+a w` | plain tmux: new window · kill window · tree |
 | Shell | `claude` (alias of `ccr`) | start Claude Code with a persistent session id |
 | Shell | `twin [@N\|new]`, `twt-all` | open windows as separate Windows Terminal tabs instead |
-| Sidebar / Shell | `Ctrl+w` / `twork new <branch>` | **one git worktree per task**: create `../<repo>-wt/<branch>`, open a window there, start `claude` |
 
 Closing the Windows Terminal tab only detaches; nothing inside tmux stops.
 Drag the pane border to resize the sidebar — the width is remembered.
-
-## Worktree-per-task (`twork`)
-Running several agents in the same checkout means they trip over each other's edits and `git` state.
-`twork` gives every task its own branch + working directory and its own tmux window:
-
-```bash
-twork new feat/login            # branch + ../<repo>-wt/feat-login + tmux window (+ claude)
-twork new hotfix --from v1.2    # branch off another ref
-twork ls                        # worktrees, their tmux windows, dirty markers
-twork drop feat/login           # refuses if dirty or not merged into the current main branch
-twork drop feat/login --force   # remove anyway (kills the window, removes worktree, keeps an unmerged branch)
-```
-Run it inside the repo (the sidebar's `Ctrl+w` runs it in `TMUX_BASE_DIR`). If the repo contains an executable
-`.worktree-setup.sh`, it is called as `.worktree-setup.sh <main checkout> <new worktree>` right after creation —
-use it to copy ignored files a fresh checkout lacks (`.env`, signing keys, `local.properties`) or to install deps.
-Worktree location: `TWORK_ROOT` in `~/.config/tmux-hub/env` (default: next to the repo). Large repos on
-`/mnt/<drive>` (NTFS) take a while to check out; the progress is shown in the sidebar.
 
 ## How it works
 - The **base tmux server** (default socket) holds the real windows.
