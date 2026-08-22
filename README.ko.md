@@ -91,7 +91,7 @@ Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아
 ## 제거
 ```bash
 systemctl --user disable --now tmux-resurrect-save.timer tmux-resurrect-restore.service
-rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,ccr} ~/.tmux-hub.conf
+rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,tmux-save-guarded,ccr} ~/.tmux-hub.conf
 # ~/.tmux.conf 의 "# >>> tmux-hub" … "# <<< tmux-hub" 블록과 ~/.bashrc 의 claude alias 제거
 # Windows Terminal: tmux-* 프로필 삭제 또는 settings.json.bak-* 로 복원
 ```

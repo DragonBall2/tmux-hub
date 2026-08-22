@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Periodic tmux-resurrect save with guards against overwriting a good `last` save with a degraded one
+# (e.g. right after a boot where the restore failed and only a couple of fresh windows exist).
+#   - no tmux server            → nothing to do
+#   - 1 window or fewer         → skip
+#   - new save has < 50% of the panes of the previous `last` (and previous had >= 4) → keep the new file as
+#     history but point `last` back to the previous one
+set -u
+DIR="$HOME/.local/share/tmux/resurrect"
+tmux ls >/dev/null 2>&1 || exit 0
+n=$(tmux list-windows -a 2>/dev/null | wc -l)
+if [ "$n" -le 1 ]; then echo "skip save: windows=$n"; exit 0; fi
+prev="$(readlink -f "$DIR/last" 2>/dev/null || true)"
+prev_panes=0; [ -n "$prev" ] && [ -f "$prev" ] && prev_panes=$(grep -c '^pane' "$prev")
+"$HOME/.tmux/plugins/tmux-resurrect/scripts/save.sh" quiet
+new="$(readlink -f "$DIR/last" 2>/dev/null || true)"
+[ -n "$new" ] && [ -f "$new" ] || exit 0
+new_panes=$(grep -c '^pane' "$new")
+if [ "$prev_panes" -ge 4 ] && [ $((new_panes * 2)) -lt "$prev_panes" ] && [ "$prev" != "$new" ]; then
+  ln -sfn "$(basename "$prev")" "$DIR/last"
+  echo "guard: new save has $new_panes panes vs $prev_panes before — kept last -> $(basename "$prev") (new file retained: $(basename "$new"))"
+else
+  echo "saved: $(basename "$new") ($new_panes panes)"
+fi

@@ -2,10 +2,20 @@
 # per-machine settings: ~/.config/tmux-hub/env
 [ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
 # Restore from the tmux-resurrect save only when the base session does not exist (e.g. right after boot).
+# Serialised with a lock: at boot the systemd service and a terminal-launched `thub` can both get here within
+# the same second, and two concurrent tmux-resurrect restores corrupt each other (seen 2026-08-22).
 BASE="${TMUX_BASE_SESSION:-main}"
 LAST="$HOME/.local/share/tmux/resurrect/last"
+LOCK="${XDG_RUNTIME_DIR:-/tmp}/tmux-hub-restore.lock"
+exec 9>"$LOCK"
+flock -w 120 9 || { echo "skip: another restore is still running"; exit 0; }
 if tmux has-session -t "$BASE" 2>/dev/null; then echo "skip: session $BASE exists"; exit 0; fi
 [ -f "$LAST" ] || { echo "skip: no save file"; exit 0; }
 n=$(grep -c '^pane' "$LAST"); [ "$n" -ge 1 ] || { echo "skip: save file is empty"; exit 0; }
 echo "restore: $(readlink -f "$LAST") (panes=$n)"
-exec "$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh"
+"$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh"
+rc=$?
+# sanity: after a restore the base session must exist, otherwise report failure loudly
+tmux has-session -t "$BASE" 2>/dev/null || { echo "restore FAILED: session $BASE missing (rc=$rc)"; exit 1; }
+echo "restored: $(tmux list-windows -t "$BASE" 2>/dev/null | wc -l) windows"
+exit 0

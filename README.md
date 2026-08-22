@@ -95,7 +95,7 @@ Drag the pane border to resize the sidebar — the width is remembered.
 ## Uninstall
 ```bash
 systemctl --user disable --now tmux-resurrect-save.timer tmux-resurrect-restore.service
-rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,ccr} ~/.tmux-hub.conf
+rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,tmux-save-guarded,ccr} ~/.tmux-hub.conf
 # remove the "# >>> tmux-hub" … "# <<< tmux-hub" block from ~/.tmux.conf and the claude alias from ~/.bashrc
 # Windows Terminal: delete the tmux-* profiles or restore settings.json.bak-*
 ```
