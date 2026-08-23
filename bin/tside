@@ -69,9 +69,17 @@ while true; do
         sp="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_pane 2>/dev/null)"
         if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then dim=pane_height; key=height; else dim=pane_width; key=width; fi
         w="$(tmux -L hub display -p -t "$sp" "#{$dim}" 2>/dev/null)"
-        if [ -n "$w" ] && [ "$w" != "$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_size 2>/dev/null)" ]; then
+        # Only treat a size change as a user drag when the client itself did not change size meanwhile:
+        # a phone keyboard popping up shrinks the client and tmux scales both panes — that must not be
+        # remembered (it once stuck the strip at 2 rows). Also never remember less than the minimum.
+        csz="$(tmux -L hub display -p -t "$HUB_OUT" '#{client_width}x#{client_height}' 2>/dev/null)"
+        min=12; [ "$key" = height ] && min=7
+        if [ -n "$w" ] && [ "$csz" = "${prev_csz:-$csz}" ] && [ "$w" -ge "$min" ] \
+           && [ "$w" != "$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_size 2>/dev/null)" ]; then
           tmux -L hub set-option -t "$HUB_OUT" @sidebar_size "$w"
         fi
+        prev_csz="$csz"
+        w="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_size 2>/dev/null)"   # persist the remembered size, not the momentary one
         # persist state for the next thub start (last window, sidebar size)
         cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
         st="window=$cur
