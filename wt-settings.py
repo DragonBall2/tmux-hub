@@ -15,6 +15,9 @@ profiles = [
 ]
 for guid, name, cmd in profiles:
     prof = {"guid": guid, "name": name, "hidden": False, "suppressApplicationTitle": False,
+            # altGrAliasing False: the Korean 한/영 key arrives as Right-Alt; with AltGr aliasing on,
+            # Windows Terminal swallows it and the IME toggle intermittently stops working
+            "altGrAliasing": False,
             "commandline": f"wsl.exe -d {distro} --cd ~ -- {cmd}"}
     for i, x in enumerate(lst):
         if x.get('guid') == guid or x.get('name') == name: lst[i] = prof; break
