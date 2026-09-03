@@ -10,7 +10,10 @@ BASE="${TMUX_BASE_SESSION:-main}"; NAME="${1:-hub}"; WIDTH="${SIDEBAR_WIDTH:-34}
 #   thub [name] [right|top]   or   SIDEBAR_POS=top thub phone
 LAYOUT="${2:-${SIDEBAR_POS:-auto}}"
 if [ "$LAYOUT" = auto ]; then
-  cols="$(tput cols 2>/dev/null || echo 200)"; if [ "${cols:-200}" -lt 90 ]; then LAYOUT=top; else LAYOUT=right; fi
+  # terminal width: $COLUMNS first (tput can fail before the PTY is fully up — a phone hub once came up
+  # in the right layout because of the 200-column fallback), then tput; last resort: right layout
+  cols="${COLUMNS:-$(tput cols 2>/dev/null || true)}"
+  if [ -n "$cols" ] && [ "$cols" -lt 90 ] 2>/dev/null; then LAYOUT=top; else LAYOUT=right; fi
 fi
 # restore previous state (last window, sidebar size)
 STATE="$HOME/.local/state/tmux-hub/$NAME"; LASTWIN=""
