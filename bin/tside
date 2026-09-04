@@ -64,7 +64,23 @@ while true; do
         curl -s "localhost:$port" >/dev/null || break   # liveness check only (GET: no action, no redraw)
       fi
       # remember a sidebar width changed by dragging (the resize hook restores it)
-      if [ -n "${HUB_OUT:-}" ]; then
+      if [ -n "${HUB_OUT:-}" ] && [ "${SIDEBAR_LAYOUT:-right}" = top ]; then
+        # top strip: auto-fit the height to the number of windows (header 4 rows + items),
+        # capped at 40% of the hub window. Manual sizing is pointless here — blank rows below
+        # the list just steal height from the body (reported 2026-09-05).
+        sp="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_pane 2>/dev/null)"
+        nwin="$(tmux list-windows -t "$BASE" 2>/dev/null | wc -l)"
+        wh="$(tmux -L hub display -p -t "$HUB_OUT" '#{window_height}' 2>/dev/null)"
+        want=$((nwin + 4)); cap=$((${wh:-40} * 2 / 5)); [ "$cap" -lt 7 ] && cap=7
+        [ "$want" -gt "$cap" ] && want=$cap; [ "$want" -lt 7 ] && want=7
+        cur="$(tmux -L hub display -p -t "$sp" '#{pane_height}' 2>/dev/null)"
+        [ -n "$cur" ] && [ "$cur" != "$want" ] && tmux -L hub resize-pane -t "$sp" -y "$want" \
+          && tmux -L hub set-option -t "$HUB_OUT" @sidebar_size "$want"
+        # persist last window only (height is derived)
+        curw="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
+        [ -n "$curw" ] && st="window=$curw" && [ "$st" != "$(cat "$HOME/.local/state/tmux-hub/$SESS" 2>/dev/null)" ] \
+          && printf '%s\n' "$st" > "$HOME/.local/state/tmux-hub/$SESS"
+      elif [ -n "${HUB_OUT:-}" ]; then
         # remember a sidebar size changed by dragging (the resize hook restores it); set-option redraws, so only on change
         sp="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_pane 2>/dev/null)"
         if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then dim=pane_height; key=height; else dim=pane_width; key=width; fi

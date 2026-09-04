@@ -61,8 +61,8 @@ bash install.sh -d ~/work -s work        # -d: 새 창 시작 폴더, -s: tmux �
 | 셸 | `claude` (=`ccr`) | 세션 ID가 보존되는 Claude Code 실행 |
 | 셸 | `twin [@N\|new]`, `twt-all` | 창을 Windows Terminal 개별 탭으로 |
 
-**좁은 화면(SSH로 붙은 휴대폰 등):** 터미널 폭이 90칸 미만이면 `thub`가 사이드바를 오른쪽 열 대신 본문 **위쪽 띠**로 배치하고
-헤더를 한 줄로 줄입니다. `thub phone top` / `thub phone right`(또는 `SIDEBAR_POS=top`)로 강제할 수 있고, `Alt+←/→`는 두 레이아웃 모두에서 패널을 오갑니다.
+**좁은 화면(SSH로 붙은 휴대폰 등):** 터미널 폭이 90칸 미만이면 `thub`가 사이드바를 본문 **위쪽 띠**로 배치합니다.
+띠 높이는 창 개수에 맞춰 자동으로 늘고 줄어(화면의 40% 상한) 아래 여백 없이 본문이 나머지를 씁니다. `thub phone top` / `thub phone right`(또는 `SIDEBAR_POS=top`)로 강제할 수 있고, `Alt+←/→`는 두 레이아웃 모두에서 패널을 오갑니다.
 
 Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아무것도 멈추지 않습니다.
 패널 경계를 드래그하면 사이드바 너비가 바뀌고 기억됩니다.

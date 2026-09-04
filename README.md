@@ -62,7 +62,7 @@ binfmt entry that lets WSL launch `wt.exe`/`clip.exe`; this entry is sometimes l
 | Shell | `twin [@N\|new]`, `twt-all` | open windows as separate Windows Terminal tabs instead |
 
 **Narrow screens (phones over SSH):** when the terminal is narrower than 90 columns, `thub` puts the sidebar as a
-strip **above** the body with a one-line header instead of a right-hand column. Force it with `thub phone top` / `thub phone right`
+strip **above** the body. The strip auto-fits its height to the number of windows (capped at 40% of the screen), so the body always gets the rest. Force it with `thub phone top` / `thub phone right`
 (or `SIDEBAR_POS=top`). `Alt+←/→` toggles between the two panes in either layout.
 
 Closing the Windows Terminal tab only detaches; nothing inside tmux stops.
