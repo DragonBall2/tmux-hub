@@ -7,15 +7,32 @@
 BASE="${TMUX_BASE_SESSION:-main}"
 LAST="$HOME/.local/share/tmux/resurrect/last"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/tmux-hub-restore.lock"
+LOG="$HOME/.local/state/tmux-hub/restore-boot.log"
+mkdir -p "$(dirname "$LOG")"
+log() { printf '%s [%s] %s\n' "$(date '+%F %T')" "$$" "$*" | tee -a "$LOG"; }
+
 exec 9>"$LOCK"
-flock -w 120 9 || { echo "skip: another restore is still running"; exit 0; }
-if tmux has-session -t "$BASE" 2>/dev/null; then echo "skip: session $BASE exists"; exit 0; fi
-[ -f "$LAST" ] || { echo "skip: no save file"; exit 0; }
-n=$(grep -c '^pane' "$LAST"); [ "$n" -ge 1 ] || { echo "skip: save file is empty"; exit 0; }
-echo "restore: $(readlink -f "$LAST") (panes=$n)"
-"$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh"
+flock -w 120 9 || { log "skip: another restore is still running"; exit 0; }
+if tmux has-session -t "$BASE" 2>/dev/null; then log "skip: session $BASE exists"; exit 0; fi
+[ -f "$LAST" ] || { log "skip: no save file"; exit 0; }
+n=$(grep -c '^pane' "$LAST"); [ "$n" -ge 1 ] || { log "skip: save file is empty"; exit 0; }
+
+# At boot the Windows drives (/mnt/<x>, drvfs) can lag behind the user manager; restoring panes whose
+# working directories are not mounted yet failed/hung once (2026-09-07). Wait for the base dir briefly.
+if [ -n "${TMUX_BASE_DIR:-}" ]; then
+  waited=0
+  until [ -d "$TMUX_BASE_DIR" ] || [ "$waited" -ge 60 ]; do sleep 2; waited=$((waited+2)); done
+  [ -d "$TMUX_BASE_DIR" ] || log "warn: $TMUX_BASE_DIR still not mounted after ${waited}s — restoring anyway"
+  [ "$waited" -gt 0 ] && log "waited ${waited}s for $TMUX_BASE_DIR"
+fi
+
+log "restore: $(readlink -f "$LAST") (panes=$n)"
+# timeout so a wedged restore cannot hold the lock forever (a boot restore once hung ~2 min); its own
+# output goes to the log with timestamps so the next failure tells us where it stopped
+timeout -k 10 90 "$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh" >>"$LOG" 2>&1
 rc=$?
+[ "$rc" = 124 ] && log "restore TIMED OUT after 90s"
 # sanity: after a restore the base session must exist, otherwise report failure loudly
-tmux has-session -t "$BASE" 2>/dev/null || { echo "restore FAILED: session $BASE missing (rc=$rc)"; exit 1; }
-echo "restored: $(tmux list-windows -t "$BASE" 2>/dev/null | wc -l) windows"
+tmux has-session -t "$BASE" 2>/dev/null || { log "restore FAILED: session $BASE missing (rc=$rc)"; exit 1; }
+log "restored: $(tmux list-windows -t "$BASE" 2>/dev/null | wc -l) windows (rc=$rc)"
 exit 0
