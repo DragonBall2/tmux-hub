@@ -29,7 +29,10 @@ fi
 log "restore: $(readlink -f "$LAST") (panes=$n)"
 # timeout so a wedged restore cannot hold the lock forever (a boot restore once hung ~2 min); its own
 # output goes to the log with timestamps so the next failure tells us where it stopped
-timeout -k 10 90 "$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh" >>"$LOG" 2>&1
+# 9>&-: do NOT let children inherit the lock fd — restore.sh starts the tmux server, and an inherited
+# fd means the server holds the flock for its whole life (every later run then waits the full 120 s;
+# this is what stalled the boot restore on 2026-09-07)
+timeout -k 10 90 "$HOME/.tmux/plugins/tmux-resurrect/scripts/restore.sh" >>"$LOG" 2>&1 9>&-
 rc=$?
 [ "$rc" = 124 ] && log "restore TIMED OUT after 90s"
 # sanity: after a restore the base session must exist, otherwise report failure loudly
