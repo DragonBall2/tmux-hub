@@ -26,7 +26,13 @@ if [ -n "${TMUX_BASE_DIR:-}" ]; then
   [ "$waited" -gt 0 ] && log "waited ${waited}s for $TMUX_BASE_DIR"
 fi
 
-log "restore: $(readlink -f "$LAST") (panes=$n)"
+# resurrect's restore.sh derives the socket from $TMUX (it is designed to run *inside* tmux).
+# Outside tmux, $TMUX is unset → its new_session runs `tmux -S "" new-session` against a bogus socket
+# while every other call queries the default one → "duplicate session" + "no server running" storms.
+# This was the real cause of every failed boot restore (2026-08-22, 09-07 x2).
+SOCK="${TMUX_TMPDIR:-/tmp}/tmux-$(id -u)/default"
+export TMUX="$SOCK,0,0"
+log "restore: $(readlink -f "$LAST") (panes=$n) socket=$SOCK"
 # timeout so a wedged restore cannot hold the lock forever (a boot restore once hung ~2 min); its own
 # output goes to the log with timestamps so the next failure tells us where it stopped
 # 9>&-: do NOT let children inherit the lock fd — restore.sh starts the tmux server, and an inherited
