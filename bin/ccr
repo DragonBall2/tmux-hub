@@ -31,7 +31,9 @@ done
 has_transcript() {
   local f
   for f in "$HOME"/.claude/projects/*/"$1".jsonl; do
-    [ -s "$f" ] && grep -q -m1 '"type":"user"' -- "$f" && return 0
+    # any non-empty transcript counts: a session started with --session-id but never chatted still
+    # occupies the id ("Session ID ... is already in use"), so --resume is the only way back in
+    [ -s "$f" ] && return 0
   done
   return 1
 }
