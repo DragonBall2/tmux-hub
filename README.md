@@ -100,5 +100,8 @@ rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,tmux-save-guar
 # Windows Terminal: delete the tmux-* profiles or restore settings.json.bak-*
 ```
 
+## Claude Code skill
+If you drive machines with Claude Code, copy `claude-skill/SKILL.md` to `~/.claude/skills/setup-tmux-hub/SKILL.md` — then asking Claude to "install tmux-hub" runs this setup end to end.
+
 ## License
 MIT

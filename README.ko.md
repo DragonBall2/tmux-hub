@@ -96,5 +96,8 @@ rm -f ~/.local/bin/{thub,tside,twin,twt-all,tmux-restore-if-empty,tmux-save-guar
 # Windows Terminal: tmux-* 프로필 삭제 또는 settings.json.bak-* 로 복원
 ```
 
+## Claude Code 스킬
+Claude Code를 쓰는 머신이라면 `claude-skill/SKILL.md`를 `~/.claude/skills/setup-tmux-hub/SKILL.md`로 복사 — 이후 "tmux-hub 깔아줘" 한마디로 설치·검증까지 진행된다.
+
 ## 라이선스
 MIT
