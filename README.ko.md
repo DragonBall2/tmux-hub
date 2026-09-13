@@ -64,8 +64,8 @@ bash install.sh -d ~/work -s work        # -d: 새 창 시작 폴더, -s: tmux �
 **좁은 화면(SSH로 붙은 휴대폰 등):** 터미널 폭이 90칸 미만이면 `thub`가 사이드바를 본문 **위쪽 띠**로 배치합니다.
 띠 높이는 창 개수에 맞춰 자동으로 늘고 줄어(화면의 40% 상한) 아래 여백 없이 본문이 나머지를 씁니다. `thub phone top` / `thub phone right`(또는 `SIDEBAR_POS=top`)로 강제할 수 있고, `Alt+←/→`는 두 레이아웃 모두에서 패널을 오갑니다.
 
-**텍스트 복사:** 일반 셸 창에서는 마우스로 드래그하면 손을 떼는 순간 Windows 클립보드에 들어갑니다.
-마우스를 직접 받는 앱(Claude Code 등)이 도는 창에서는 **Shift를 누른 채 드래그** — Windows Terminal이 직접 선택하고 놓는 순간 복사합니다(`copyOnSelect`).
+**텍스트 복사:** 어느 창에서든 마우스로 드래그하면 손을 떼는 순간 Windows 클립보드에 들어갑니다(마우스를 직접 받는 앱—Claude Code 등—에서도
+tmux가 드래그를 가로채 선택; 클릭·휠은 앱에 그대로 전달). Shift+드래그는 Windows Terminal 자체 선택 방식의 대안(`copyOnSelect`).
 
 Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아무것도 멈추지 않습니다.
 패널 경계를 드래그하면 사이드바 너비가 바뀌고 기억됩니다.

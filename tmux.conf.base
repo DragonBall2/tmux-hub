@@ -16,3 +16,7 @@ set -g prefix C-a
 bind C-a send-prefix
 set -g history-limit 50000
 set -g escape-time 10
+
+# Plain mouse drag always selects in tmux, even when the app in the pane asked for the mouse (Claude Code does —
+# otherwise the drag is swallowed by the app and nothing reaches the clipboard). Clicks and wheel still pass through.
+bind -n MouseDrag1Pane copy-mode -M
