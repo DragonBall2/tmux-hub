@@ -5,8 +5,8 @@ set -ga terminal-overrides ",*:Tc"
 setw -g mode-keys vi
 setw -g mode-style "reverse"
 bind -T copy-mode-vi v send -X begin-selection
-bind -T copy-mode-vi y send -X copy-pipe-and-cancel "clip.exe"
-bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-pipe-and-cancel "clip.exe"
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel "/mnt/c/Windows/system32/clip.exe"
+bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-pipe-and-cancel "/mnt/c/Windows/system32/clip.exe"
 # window name = terminal title set by the running app (e.g. Claude Code session name) + [@window id]
 set -g automatic-rename on
 set -g automatic-rename-format '#{pane_title} [#{window_id}]'
