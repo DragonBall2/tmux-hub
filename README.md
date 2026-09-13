@@ -65,6 +65,10 @@ binfmt entry that lets WSL launch `wt.exe`/`clip.exe`; this entry is sometimes l
 strip **above** the body. The strip auto-fits its height to the number of windows (capped at 40% of the screen), so the body always gets the rest. Force it with `thub phone top` / `thub phone right`
 (or `SIDEBAR_POS=top`). `Alt+←/→` toggles between the two panes in either layout.
 
+**Copying text:** in a plain shell window, drag with the mouse — the selection lands in the Windows clipboard on release.
+In windows running an app that grabs the mouse (Claude Code does), hold **Shift** while dragging: Windows Terminal then
+selects natively and copies on release (`copyOnSelect`).
+
 Closing the Windows Terminal tab only detaches; nothing inside tmux stops.
 Drag the pane border to resize the sidebar — the width is remembered.
 

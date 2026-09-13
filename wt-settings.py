@@ -23,6 +23,7 @@ for guid, name, cmd in profiles:
         if x.get('guid') == guid or x.get('name') == name: lst[i] = prof; break
     else: lst.insert(0, prof)
 d['defaultProfile'] = profiles[0][0]
+d['copyOnSelect'] = True   # Shift+drag copies on release (apps like Claude Code grab the mouse, so tmux copy-mode never sees the drag)
 d['tabWidthMode'] = 'titleLength'; d['showTabsInTitlebar'] = False
 d['firstWindowPreference'] = 'persistedWindowLayout'
 json.dump(d, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=4)
