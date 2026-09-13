@@ -82,7 +82,11 @@ Drag the pane border to resize the sidebar — the width is remembered.
 - Windows Terminal profile: `startingDirectory: //wsl$/...`, non-ASCII profile names and emoji icons make
   the tab silently fail to open. The installer avoids all three.
 - `wt.exe`/`clip.exe` → `Exec format error` / `MZ: command not found`: the `WSLInterop` binfmt entry is
-  missing (see Install).
+  missing. `systemd-binfmt.service` flushes it at every distro start once any `/usr/lib/binfmt.d/*.conf` exists —
+  the durable fix is `sudo systemctl mask systemd-binfmt.service` (then re-register once, see Install).
+- **WSL stops the distro ~10 s after the last `wsl.exe` session closes** — background tmux does not keep it alive.
+  The installer drops a hidden `wsl.exe --exec sleep infinity` into the Windows Startup folder; without it the
+  boot restore succeeds and then dies with the distro (seen 2026-09-13: five restore/kill cycles in a minute).
 - A periodic save that runs before restore can overwrite a good save with an empty one — the save service
   skips when only one window exists. If it ever happens: pick the last big file in
   `~/.local/share/tmux/resurrect/`, point the `last` symlink at it, run `.../tmux-resurrect/scripts/restore.sh`.

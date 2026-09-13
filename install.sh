@@ -97,6 +97,16 @@ if [ -n "${WSL_DISTRO_NAME:-}" ]; then
   else echo "  OK"; fi
 fi
 
+if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+  say "Windows logon keepalive (Startup folder)"
+  # WSL terminates the distro ~10 s after the last wsl.exe session closes — background tmux does NOT keep
+  # it alive. A hidden persistent session started at logon keeps tmux/Tailscale up without a terminal.
+  SU="$(ls -d /mnt/c/Users/*/AppData/Roaming/Microsoft/Windows/Start\ Menu/Programs/Startup 2>/dev/null | head -1)"
+  if [ -n "$SU" ]; then
+    printf 'Set sh = CreateObject("WScript.Shell")\r\nsh.Run "wsl.exe -d %s --exec sleep infinity", 0, False\r\n' "$WSL_DISTRO_NAME" > "$SU/wsl-tmux-keepalive.vbs" && echo "  $SU/wsl-tmux-keepalive.vbs"
+  else echo "  ⚠ Startup folder not found — create it by hand (see README)"; fi
+fi
+
 if [ "$DO_WT" = 1 ]; then
   say "Windows Terminal profiles"
   python3 "$HERE/wt-settings.py" "$WSL_DISTRO_NAME" || echo "  ⚠ could not update Windows Terminal settings (is it installed and launched once?)"

@@ -79,7 +79,10 @@ Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아
 ## 겪은 함정
 - Windows Terminal 프로필에 `startingDirectory: //wsl$/...`, 비ASCII 이름, emoji 아이콘을 넣으면 탭이 조용히
   안 뜸 — 설치 스크립트는 셋 다 피함
-- `wt.exe`/`clip.exe` → `Exec format error` / `MZ: command not found`: `WSLInterop` binfmt 항목 유실(설치 절 참고)
+- `wt.exe`/`clip.exe` → `Exec format error` / `MZ: command not found`: `WSLInterop` binfmt 항목 유실. `/usr/lib/binfmt.d/*.conf`가 하나라도 있으면
+  배포판 시작마다 `systemd-binfmt.service`가 등록을 비움 — 확실한 해법은 `sudo systemctl mask systemd-binfmt.service`(후 1회 재등록)
+- **WSL은 마지막 `wsl.exe` 세션이 닫히고 ~10초 뒤 배포판을 종료** — 백그라운드 tmux로는 못 막음. 설치 스크립트가 Windows 시작 프로그램에
+  숨김 `wsl.exe --exec sleep infinity`를 넣어 둠. 없으면 부팅 복원이 성공한 직후 배포판과 함께 죽음(2026-09-13, 1분에 5번 반복 실측)
 - 복원 전에 도는 주기 저장이 정상 저장본을 빈 것으로 덮을 수 있음 → 저장 서비스는 창이 1개면 건너뜀.
   그래도 생기면 `~/.local/share/tmux/resurrect/`의 마지막 큰 파일로 `last` 심링크를 돌리고
   `.../tmux-resurrect/scripts/restore.sh`
