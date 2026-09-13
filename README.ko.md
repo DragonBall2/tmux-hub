@@ -24,8 +24,8 @@ AI 코딩 에이전트, 개발 서버, SSH 같은 오래 도는 터미널 세션
 ## 제공하는 것
 - **사이드바**(오른쪽): 창 목록 실시간 표시, 퍼지 필터, 클릭/방향키 한 번으로 전환, `^N` 새 창,
   `^X` 닫기(확인 필수, 실행 중인 프로그램이 있으면 경고)
-- **영속화**: tmux-resurrect가 5분마다 저장(systemd 사용자 타이머), 부팅 시 창·작업 폴더·등록된 프로그램
-  복원. Windows Terminal은 탭 구성을 복원
+- **영속화**: tmux-resurrect가 5분마다 저장(systemd 사용자 타이머). 재부팅 후 처음 `thub`를 띄울 때(=Windows Terminal을 열 때)
+  마지막 저장본에서 창·작업 폴더·등록된 프로그램을 복원. 부팅 시 무인 복원은 **일부러 없음** — 아래 "부팅 복원을 뺀 이유" 참조
 - **Claude Code 연동(선택, 자동 감지)**: 세션을 고정 ID로 시작해 재부팅 후 각 창이 `claude --resume <id>`로
   돌아옴 — 같은 대화, 같은 이름
 - 창 이름은 실행 중인 앱의 터미널 제목(예: Claude 세션 이름)을 따라감
@@ -75,9 +75,10 @@ Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아
 - `thub`가 소켓 `hub`에 **바깥 tmux 서버**를 띄우고 2패널 구성: 기본 서버의 *그룹 세션*에 중첩 `tmux attach`
   (탭마다 독립된 현재 창) + `tside`(`fzf --listen` 루프, 2초마다 커서 유지한 채 목록 갱신)
 - 바깥 서버는 prefix·상태바가 없어 모든 키가 안쪽 tmux로 전달됨
-- 저장/복원: `tmux-resurrect` + systemd 사용자 타이머(`tmux-resurrect-save.timer`) + 부팅 복원 서비스.
-  continuum의 내장 타이머·자동 복원은 **쓰지 않음**: 타이머는 상태바가 그려질 때만 돌고, 자동 복원은
-  두 번째 tmux 서버(hub)를 보면 포기함
+- 저장/복원: `tmux-resurrect` + systemd 사용자 타이머(`tmux-resurrect-save.timer`); 기본 세션이 없으면 `thub`가 복원을 실행.
+  continuum의 내장 타이머·자동 복원은 **쓰지 않음**: 타이머는 상태바가 그려질 때만 돌고, 자동 복원은 두 번째 tmux 서버(hub)를 보면 포기함
+- **부팅 복원을 뺀 이유:** systemd 부팅 복원을 3주간 운영해 재부팅 5회 중 4회 실패, 매번 다른 WSL 특유의 전제(드라이브 마운트,
+  마지막 세션 후 배포판 종료, oneshot cgroup 정리, resurrect의 `$TMUX` 소켓 가정)가 깨졌다. 터미널에서 요청 시 복원하는 방식엔 그 움직이는 부품이 없다
 
 ## 겪은 함정
 - Windows Terminal 프로필에 `startingDirectory: //wsl$/...`, 비ASCII 이름, emoji 아이콘을 넣으면 탭이 조용히

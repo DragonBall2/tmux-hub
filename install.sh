@@ -72,14 +72,13 @@ PY
 install -m644 "$HERE/tmux-hub.conf" ~/.tmux-hub.conf
 tmux ls >/dev/null 2>&1 && tmux source-file ~/.tmux.conf || true
 
-say "systemd user services (save every 5 min / restore at boot)"
+say "systemd user timer (save every 5 min)"
 if systemctl --user status >/dev/null 2>&1; then
   mkdir -p ~/.config/systemd/user; install -m644 "$HERE"/systemd/* ~/.config/systemd/user/
   systemctl --user daemon-reload
   systemctl --user enable --now tmux-resurrect-save.timer >/dev/null
-  systemctl --user enable tmux-resurrect-restore.service >/dev/null
   loginctl enable-linger "$USER" 2>/dev/null || true
-  echo "  enabled: tmux-resurrect-save.timer, tmux-resurrect-restore.service (linger on)"
+  echo "  enabled: tmux-resurrect-save.timer (linger on)"
 else
   echo "  ⚠ systemd --user is not available. In WSL: add '[boot]\\nsystemd=true' to /etc/wsl.conf, run 'wsl --shutdown', then re-run."
 fi
@@ -116,7 +115,7 @@ say "Done"
 cat <<MSG
   - Open a new Windows Terminal window: the 'tmux-hub' tab (body + window sidebar) appears.
   - Sidebar: ↑↓/click switch · ^N new window · ^X close · ^R refresh.  Body: plain tmux (prefix Ctrl+a).
-  - After a reboot: tmux windows are restored automatically and Windows Terminal reopens the tab.
+  - After a reboot: open Windows Terminal — thub restores the windows from the last save (~30 s).
 $([ "$CLAUDE" = 1 ] && echo "  - Claude Code: start sessions with 'claude' (=ccr) so they come back with --resume after a reboot.")
   - Per-machine settings: ~/.config/tmux-hub/env
 MSG

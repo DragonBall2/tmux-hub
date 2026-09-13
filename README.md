@@ -24,8 +24,9 @@ VS Code, even reboot Windows: the windows come back, and Windows Terminal reopen
 ## What you get
 - **Sidebar** (right pane): live list of tmux windows, fuzzy filter, single-click/arrow switching,
   `^N` new window, `^X` close (with confirmation and a warning if something is running).
-- **Persistence**: tmux-resurrect saves every 5 min (systemd user timer); at boot the windows, working
-  directories and whitelisted programs are restored. Windows Terminal restores the tab layout.
+- **Persistence**: tmux-resurrect saves every 5 min (systemd user timer). After a reboot, the first `thub` (i.e. opening
+  Windows Terminal) restores windows, working directories and whitelisted programs from the last save. There is
+  deliberately no unattended boot-time restore — see "Why no boot restore" below.
 - **Claude Code integration (optional, auto-detected)**: sessions are started with a fixed session id, so
   after a reboot each window comes back with `claude --resume <id>` — same conversation, same name.
 - Window names follow the running app's terminal title (e.g. the Claude session name).
@@ -78,9 +79,12 @@ Drag the pane border to resize the sidebar — the width is remembered.
   *grouped* session of the base server (so each tab has its own current window), and `tside`, an
   `fzf --listen` loop that reloads the window list every 2 s without losing the cursor.
 - The outer server has no prefix and no status bar, so every key reaches the inner tmux.
-- Save/restore: `tmux-resurrect` + a systemd user timer (`tmux-resurrect-save.timer`) and a boot-time
-  restore service. continuum's built-in timer and auto-restore are **not** used: its timer only ticks while
+- Save/restore: `tmux-resurrect` + a systemd user timer (`tmux-resurrect-save.timer`); `thub` runs the restore when
+  the base session is missing. continuum's built-in timer and auto-restore are **not** used: its timer only ticks while
   a status bar is rendered, and its auto-restore bails out when it sees a second tmux server (the hub).
+- **Why no boot restore:** a systemd-at-boot restore was tried for three weeks and failed 4 of 5 reboots, each time on a
+  different WSL-specific assumption (drive mounts, the distro shutting down after the last session, oneshot cgroup cleanup,
+  resurrect deriving its socket from `$TMUX`). Restoring on demand from a terminal has none of those moving parts.
 
 ## Pitfalls we hit (so you don't have to)
 - Windows Terminal profile: `startingDirectory: //wsl$/...`, non-ASCII profile names and emoji icons make

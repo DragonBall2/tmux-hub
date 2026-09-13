@@ -2,8 +2,8 @@
 # per-machine settings: ~/.config/tmux-hub/env
 [ -f "$HOME/.config/tmux-hub/env" ] && . "$HOME/.config/tmux-hub/env"
 # Restore from the tmux-resurrect save only when the base session does not exist (e.g. right after boot).
-# Serialised with a lock: at boot the systemd service and a terminal-launched `thub` can both get here within
-# the same second, and two concurrent tmux-resurrect restores corrupt each other (seen 2026-08-22).
+# Serialised with a lock: two terminals opened at once would both try to restore, and two concurrent
+# tmux-resurrect restores corrupt each other (seen 2026-08-22).
 BASE="${TMUX_BASE_SESSION:-main}"
 LAST="$HOME/.local/share/tmux/resurrect/last"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/tmux-hub-restore.lock"

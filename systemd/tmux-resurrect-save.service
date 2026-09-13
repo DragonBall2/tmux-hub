@@ -1,6 +1,5 @@
 [Unit]
 Description=tmux-resurrect periodic save (continuum does not fire for control-mode-only clients)
-After=tmux-resurrect-restore.service
 
 [Service]
 Type=oneshot

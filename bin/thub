@@ -23,7 +23,9 @@ if [ -f "$STATE" ]; then
   h="$(sed -n 's/^height=//p' "$STATE")"; [ -n "${SIDEBAR_HEIGHT:-}" ] || { [ -n "$h" ] && HEIGHT="$h"; }
 fi
 # No base session (e.g. right after boot): restore from the resurrect save first (synchronously).
-# continuum's auto-restore is not used: it skips when another tmux server (the hub) exists.
+# This is the only restore path — deliberately no boot-time service: unattended restores in WSL kept
+# breaking on timing (drive mounts, distro shutdown, cgroup cleanup). A restore that runs when you open
+# a terminal is boring and works.
 # Always go through tmux-restore-if-empty: it takes the restore lock, so if the boot service is restoring
 # right now we wait for it instead of attaching to a half-built server (seen 2026-09-13: the body client
 # ended up on the wrong session because the base session existed but the grouped sessions did not yet).

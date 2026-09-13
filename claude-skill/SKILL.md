@@ -32,13 +32,13 @@ cd ~/tmux-hub && bash install.sh -d <기본 작업 폴더> -s <세션 이름>
 ```bash
 tmux -L hub ls                                   # thub 실행 후 hub-<이름> 세션 존재
 systemctl --user list-timers | grep resurrect     # 5분 저장 타이머 활성
-systemctl --user is-enabled tmux-resurrect-restore.service   # enabled
 printf test | clip.exe && powershell.exe -NoProfile -c Get-Clipboard   # 복사 경로
 ```
 - Windows Terminal 새 창 → `tmux-hub` 탭이 기본으로 뜨는지
-- 재부팅 검증까지 요청받으면: 저장(`systemctl --user start tmux-resurrect-save.service`) 후 재부팅 →
-  `~/.local/state/tmux-hub/restore-boot.log`에 `restored: N windows (rc=0)` 확인 →
-  Claude 창들의 "Resume from summary" 프롬프트를 일괄 처리(`capture-pane`으로 감지, Down+Enter = full session)
+- 재부팅 후 복원은 **무인이 아니라 `thub`(터미널 열기) 시점**에 일어난다(부팅 서비스는 2026-09-13 폐기 — WSL 타이밍 문제로 5회 중 4회 실패).
+  검증: 저장(`systemctl --user start tmux-resurrect-save.service`) → 재부팅 → WT 열기 → `~/.local/state/tmux-hub/restore-boot.log`에
+  `restored: N windows (rc=0)` → Claude 창들의 "Resume from summary" 프롬프트 일괄 처리(`capture-pane`으로 감지, Down+Enter = full session)
+- WSL은 마지막 wsl.exe 세션 종료 ~10초 뒤 배포판을 끈다 → install.sh가 시작 프로그램에 숨김 `wsl.exe --exec sleep infinity`를 둔다(원격 접속·tmux 생존용)
 
 ## 4. 장애 시 (복원 실패)
 1. `~/.local/state/tmux-hub/restore-boot.log` 확인 — 실패 지점이 타임스탬프로 남음
