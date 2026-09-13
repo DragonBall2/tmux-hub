@@ -24,7 +24,10 @@ if [ -f "$STATE" ]; then
 fi
 # No base session (e.g. right after boot): restore from the resurrect save first (synchronously).
 # continuum's auto-restore is not used: it skips when another tmux server (the hub) exists.
-tmux has-session -t "$BASE" 2>/dev/null || tmux-restore-if-empty >/dev/null 2>&1 || true
+# Always go through tmux-restore-if-empty: it takes the restore lock, so if the boot service is restoring
+# right now we wait for it instead of attaching to a half-built server (seen 2026-09-13: the body client
+# ended up on the wrong session because the base session existed but the grouped sessions did not yet).
+tmux-restore-if-empty >/dev/null 2>&1 || true
 tmux has-session -t "$BASE" 2>/dev/null || tmux new-session -d -s "$BASE" -c "${TMUX_BASE_DIR:-$HOME}"
 # inner: grouped session of the base session (independent current window per tab)
 if ! tmux has-session -t "$NAME" 2>/dev/null; then
