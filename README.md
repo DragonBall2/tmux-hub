@@ -100,6 +100,9 @@ Drag the pane border to resize the sidebar — the width is remembered.
   `~/.local/share/tmux/resurrect/`, point the `last` symlink at it, run `.../tmux-resurrect/scripts/restore.sh`.
 - tmux 3.2a draws wide (CJK) characters at a pane edge into the neighbouring pane's first column — that is
   why the sidebar sits on the right.
+- Running the VS Code tmux-integrated extension next to the hub: its auto-connect creates a session named after the
+  workspace folder. Keep `TMUX_BASE_SESSION` different from that name, or the extension's empty session makes `thub`
+  think there is nothing to restore (issue #1).
 - If you script window clean-up, do not match `pane_current_command == bash`: windows started as
   `bash -lc 'claude …'` look like bash. Diff window ids before/after instead.
 - VS Code's tmux-integrated extension kills the window when you close its tab; Windows Terminal tabs only detach.

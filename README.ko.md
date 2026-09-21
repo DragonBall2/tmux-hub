@@ -91,6 +91,8 @@ Windows Terminal 탭을 닫는 것은 detach일 뿐이라 tmux 안의 것은 아
   그래도 생기면 `~/.local/share/tmux/resurrect/`의 마지막 큰 파일로 `last` 심링크를 돌리고
   `.../tmux-resurrect/scripts/restore.sh`
 - tmux 3.2a는 패널 경계의 전각(CJK) 문자를 옆 패널 첫 칸에 그림 — 사이드바가 오른쪽에 있는 이유
+- VS Code tmux-integrated 확장을 허브와 함께 쓸 때: 확장의 자동 연결이 워크스페이스 폴더명으로 세션을 만든다. `TMUX_BASE_SESSION`을
+  그 이름과 다르게 두지 않으면, 확장이 만든 빈 세션 때문에 `thub`가 복원할 게 없다고 판단한다(issue #1)
 - 창 정리를 스크립트로 할 때 `pane_current_command == bash`로 고르지 말 것: `bash -lc 'claude …'`로 시작한
   창도 bash로 보임. 생성 전후 창 ID diff로 특정
 - VS Code tmux-integrated 확장은 탭을 닫으면 창을 kill함. Windows Terminal 탭은 detach만

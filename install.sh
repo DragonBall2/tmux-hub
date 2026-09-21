@@ -75,6 +75,12 @@ tmux ls >/dev/null 2>&1 && tmux source-file ~/.tmux.conf || true
 say "systemd user timer (save every 5 min)"
 if systemctl --user status >/dev/null 2>&1; then
   mkdir -p ~/.config/systemd/user; install -m644 "$HERE"/systemd/* ~/.config/systemd/user/
+  # migration: the boot-time restore service was retired (it raced VS Code / terminal-launched sessions
+  # for the default socket and the oneshot cgroup cleanup killed the restored server — issue #1)
+  if [ -f ~/.config/systemd/user/tmux-resurrect-restore.service ]; then
+    systemctl --user disable --now tmux-resurrect-restore.service >/dev/null 2>&1 || true
+    unlink ~/.config/systemd/user/tmux-resurrect-restore.service; echo "  removed retired tmux-resurrect-restore.service"
+  fi
   systemctl --user daemon-reload
   systemctl --user enable --now tmux-resurrect-save.timer >/dev/null
   loginctl enable-linger "$USER" 2>/dev/null || true

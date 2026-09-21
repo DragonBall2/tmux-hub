@@ -18,9 +18,12 @@ fi
 # restore previous state (last window, sidebar size)
 STATE="$HOME/.local/state/tmux-hub/$NAME"; LASTWIN=""
 if [ -f "$STATE" ]; then
-  LASTWIN="$(sed -n 's/^window=//p' "$STATE")"
-  w="$(sed -n 's/^width=//p' "$STATE")";  [ -n "${SIDEBAR_WIDTH:-}" ]  || { [ -n "$w" ] && WIDTH="$w"; }
-  h="$(sed -n 's/^height=//p' "$STATE")"; [ -n "${SIDEBAR_HEIGHT:-}" ] || { [ -n "$h" ] && HEIGHT="$h"; }
+  # last value only, digits only: a corrupted/duplicated state file must never reach split-window (issue #1)
+  LASTWIN="$(sed -n 's/^window=//p' "$STATE" | tail -1)"
+  w="$(sed -n 's/^width=//p'  "$STATE" | tail -1)"; case "$w" in ''|*[!0-9]*) w="";; esac
+  h="$(sed -n 's/^height=//p' "$STATE" | tail -1)"; case "$h" in ''|*[!0-9]*) h="";; esac
+  [ -n "${SIDEBAR_WIDTH:-}" ]  || { [ -n "$w" ] && WIDTH="$w"; }
+  [ -n "${SIDEBAR_HEIGHT:-}" ] || { [ -n "$h" ] && HEIGHT="$h"; }
 fi
 # No base session (e.g. right after boot): restore from the resurrect save first (synchronously).
 # This is the only restore path — deliberately no boot-time service: unattended restores in WSL kept

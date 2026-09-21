@@ -40,7 +40,23 @@ wmove() {   # Alt+↑/↓: swap the window with its neighbour in the list (reord
   elif [ "$dir" = down ] && [ -n "$next" ]; then tmux swap-window -d -s "$w" -t "$next"; fi
   tmux select-window -t "$SESS:$w" 2>/dev/null || true
 }
-export -f list curpos confirm_kill wmove
+# state file: exactly one window=/width=/height= line each, written atomically (tmp + mv).
+# Never carry lines over from the old file — an earlier version copied every matching line and two
+# sidebars on the same hub name grew the file to 400k lines (issue #1).
+save_state() {   # $1 window id, $2 key (width|height) or "", $3 value
+  local f="$HOME/.local/state/tmux-hub/$SESS" w h
+  w="$(sed -n 's/^width=//p'  "$f" 2>/dev/null | tail -1)"
+  h="$(sed -n 's/^height=//p' "$f" 2>/dev/null | tail -1)"
+  case "$2" in width) w="$3";; height) h="$3";; esac
+  local st="window=$1"
+  [ -n "$w" ] && st="$st
+width=$w"
+  [ -n "$h" ] && st="$st
+height=$h"
+  [ "$st" = "$(cat "$f" 2>/dev/null)" ] && return 0
+  printf '%s\n' "$st" > "$f.tmp.$$" && mv -f "$f.tmp.$$" "$f"
+}
+export -f list curpos confirm_kill wmove save_state
 if [ "${SIDEBAR_LAYOUT:-right}" = top ]; then
   if [ "$L" = ko ]; then HEADER="$(printf ' ↑↓·클릭 이동  ^N 새 창  ^X 닫기  ^R 갱신\n Alt+↑↓ 순서  Alt+←→ 패널  Alt+[ ] 크기')"
   else HEADER="$(printf ' ↑↓/click switch  ^N new  ^X close  ^R refresh\n Alt+↑↓ reorder  Alt+←→ pane  Alt+[ ] size')"; fi
@@ -78,8 +94,7 @@ while true; do
           && tmux -L hub set-option -t "$HUB_OUT" @sidebar_size "$want"
         # persist last window only (height is derived)
         curw="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
-        [ -n "$curw" ] && st="window=$curw" && [ "$st" != "$(cat "$HOME/.local/state/tmux-hub/$SESS" 2>/dev/null)" ] \
-          && printf '%s\n' "$st" > "$HOME/.local/state/tmux-hub/$SESS"
+        [ -n "$curw" ] && save_state "$curw" "" ""
       elif [ -n "${HUB_OUT:-}" ]; then
         # remember a sidebar size changed by dragging (the resize hook restores it); set-option redraws, so only on change
         sp="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_pane 2>/dev/null)"
@@ -98,14 +113,7 @@ while true; do
         w="$(tmux -L hub show -v -t "$HUB_OUT" @sidebar_size 2>/dev/null)"   # persist the remembered size, not the momentary one
         # persist state for the next thub start (last window, sidebar size)
         cur="$(tmux display -p -t "$SESS" '#{window_id}' 2>/dev/null)"
-        st="window=$cur
-$key=$w"
-        if [ -n "$cur" ]; then
-          f="$HOME/.local/state/tmux-hub/$SESS"; other="$( [ "$key" = width ] && grep '^height=' "$f" 2>/dev/null || grep '^width=' "$f" 2>/dev/null )"
-          [ -n "$other" ] && st="$st
-$other"
-          [ "$st" != "$(cat "$f" 2>/dev/null)" ] && printf '%s\n' "$st" > "$f"
-        fi
+        [ -n "$cur" ] && save_state "$cur" "$key" "$w"
       fi
     done ) &
   ticker=$!
